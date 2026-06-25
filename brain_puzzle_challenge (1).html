@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain Puzzle Challenge</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            heading: ['"Space Grotesk"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.3);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.5);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.8);
+    }
+
+    /* Floating Animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(2deg); }
+    }
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    /* Grid pattern background */
+    .bg-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+
+    /* Sparkle effect */
+    @keyframes sparkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+    .sparkle {
+      animation: sparkle 2s infinite ease-in-out;
+    }
+
+    /* Custom Switch / Slide Transitions */
+    .view-transition {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen bg-grid flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+  <!-- Background Glows -->
+  <div class="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px] pointer-events-none -z-10"></div>
+  <div class="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-900/20 blur-[120px] pointer-events-none -z-10"></div>
+
+  <!-- Main Navigation / Header -->
+  <header class="border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md sticky top-0 z-40 px-4 py-3 sm:px-6">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="showView('home-view')">
+        <div class="h-10 w-10 bg-gradient-to-tr from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i class="fa-solid fa-brain text-white text-xl animate-pulse"></i>
+        </div>
+        <div>
+          <h1 class="font-heading font-bold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">
+            BrainPuzzle
+          </h1>
+          <span class="text-xs text-indigo-400 font-semibold tracking-wider uppercase">Challenge Elite</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-4">
+        <!-- Audio Toggle -->
+        <button id="sound-btn" onclick="toggleSound()" class="p-2.5 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-all duration-200" title="Toggle Sound FX">
+          <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+        </button>
+        <!-- Info Trigger -->
+        <button onclick="showInstructions()" class="p-2.5 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-all duration-200" title="How To Play">
+          <i class="fa-solid fa-circle-question"></i>
+        </button>
+        <!-- Leaderboard Trigger -->
+        <button onclick="openLeaderboard()" class="px-3 py-2 sm:px-4 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-indigo-200 font-medium text-sm transition-all duration-200 flex items-center gap-2">
+          <i class="fa-solid fa-trophy text-amber-400"></i>
+          <span class="hidden sm:inline">Leaderboard</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner -->
+  <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toast-bg" class="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl border border-slate-800 text-sm font-semibold">
+      <i id="toast-icon" class="text-lg"></i>
+      <span id="toast-message"></span>
+    </div>
+  </div>
+
+  <!-- Dynamic Content Container -->
+  <main class="flex-grow max-w-6xl w-full mx-auto p-2 sm:p-4 md:p-6 flex flex-col justify-center items-center">
+
+    <!-- 1. HOME VIEW -->
+    <section id="home-view" class="view-transition w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center py-6">
+      <div class="md:col-span-7 space-y-6 text-center md:text-left">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
+          <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+          New: Memory and Logic Levels Added
+        </div>
+        <h2 class="font-heading text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight text-white">
+          Level Up Your <br class="hidden sm:inline">
+          <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Cognitive Power</span>
+        </h2>
+        <p class="text-slate-400 text-base sm:text-lg max-w-xl mx-auto md:mx-0">
+          Supercharge your critical thinking, logical deduction, memory retention, and mathematical dexterity in one fast-paced, highly rewarding gamified IQ workout.
+        </p>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-3 gap-3 max-w-md mx-auto md:mx-0 pt-2">
+          <div class="p-3 rounded-2xl bg-slate-900/50 border border-slate-800/80 text-center">
+            <div class="text-xl sm:text-2xl font-bold text-indigo-400 font-heading">10</div>
+            <div class="text-[10px] text-slate-500 uppercase tracking-widest">Levels</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-900/50 border border-slate-800/80 text-center">
+            <div class="text-xl sm:text-2xl font-bold text-pink-400 font-heading">4+</div>
+            <div class="text-[10px] text-slate-500 uppercase tracking-widest">Categories</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-900/50 border border-slate-800/80 text-center">
+            <div id="home-best-score" class="text-xl sm:text-2xl font-bold text-emerald-400 font-heading">0</div>
+            <div class="text-[10px] text-slate-500 uppercase tracking-widest">Your Best</div>
+          </div>
+        </div>
+
+        <div class="pt-4 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+          <button onclick="startGame()" class="px-8 py-4 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-bold rounded-2xl shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 flex items-center justify-center gap-3 text-lg">
+            <i class="fa-solid fa-play text-emerald-300"></i> Start Challenge
+          </button>
+          <button onclick="openAchievements()" class="px-6 py-4 bg-slate-900 border border-slate-800 hover:border-slate-700 hover:bg-slate-850 text-slate-300 font-semibold rounded-2xl transition-all duration-150 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-award text-amber-400"></i> Achievements
+          </button>
+        </div>
+      </div>
+
+      <div class="md:col-span-5 flex justify-center relative py-6">
+        <!-- Main Logo Illustration -->
+        <div class="absolute w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+        <div class="relative w-72 h-72 sm:w-80 sm:h-80 animate-float flex items-center justify-center">
+          <!-- Central Brain SVG with modern tech grid representation -->
+          <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-[0_0_35px_rgba(99,102,241,0.3)]">
+            <defs>
+              <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#818cf8" />
+                <stop offset="50%" stop-color="#c084fc" />
+                <stop offset="100%" stop-color="#f472b6" />
+              </linearGradient>
+            </defs>
+            <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-width="2" stroke-dasharray="5,5" />
+            <circle cx="100" cy="100" r="65" fill="none" stroke="rgba(99, 102, 241, 0.1)" stroke-width="1" />
+            <!-- Brain icon representation -->
+            <path d="M100,50 C80,50 65,65 65,85 C65,95 72,103 80,108 C75,115 75,125 85,135 C90,140 95,142 100,145 C105,142 110,140 115,135 C125,125 125,115 120,108 C128,103 135,95 135,85 C135,65 120,50 100,50 Z" fill="url(#brainGrad)" opacity="0.15"/>
+            <!-- Cybernetic brain connection nodes -->
+            <line x1="100" y1="50" x2="100" y2="145" stroke="url(#brainGrad)" stroke-width="2" opacity="0.6"/>
+            <line x1="65" y1="85" x2="135" y2="85" stroke="url(#brainGrad)" stroke-width="1.5" opacity="0.4"/>
+            <!-- Nodes -->
+            <circle cx="100" cy="50" r="5" fill="#f472b6" class="sparkle"/>
+            <circle cx="100" cy="145" r="5" fill="#818cf8" class="sparkle"/>
+            <circle cx="65" cy="85" r="5" fill="#c084fc" class="sparkle"/>
+            <circle cx="135" cy="85" r="5" fill="#818cf8" class="sparkle"/>
+            <!-- Math/Code Floating Graphics -->
+            <text x="45" y="65" fill="#818cf8" font-size="12" font-family="monospace" font-weight="bold" opacity="0.7">f(x)</text>
+            <text x="135" y="130" fill="#f472b6" font-size="12" font-family="monospace" font-weight="bold" opacity="0.7">∑=9</text>
+            <text x="135" y="65" fill="#c084fc" font-size="14" font-weight="bold" opacity="0.8">💡</text>
+            <text x="40" y="130" fill="#34d399" font-size="14" font-weight="bold" opacity="0.8">★</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. GAME PLAY VIEW -->
+    <section id="game-view" class="view-transition w-full max-w-4xl hidden py-2 sm:py-4 flex flex-col gap-2 sm:gap-4">
+      
+      <!-- Live Game Dashboard Header -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-800/80 shadow-lg">
+        
+        <!-- Timer Widget -->
+        <div class="flex items-center gap-2 sm:gap-3 bg-slate-950/40 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-800/50">
+          <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400">
+            <i class="fa-solid fa-clock text-sm sm:text-lg animate-pulse"></i>
+          </div>
+          <div>
+            <div class="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Time Remaining</div>
+            <div id="game-timer" class="font-heading text-sm sm:text-lg font-bold text-rose-400">01:30</div>
+          </div>
+        </div>
+
+        <!-- Score Widget -->
+        <div class="flex items-center gap-2 sm:gap-3 bg-slate-950/40 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-800/50">
+          <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+            <i class="fa-solid fa-star text-sm sm:text-lg"></i>
+          </div>
+          <div>
+            <div class="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Current Score</div>
+            <div id="game-score" class="font-heading text-sm sm:text-lg font-bold text-amber-400">0000</div>
+          </div>
+        </div>
+
+        <!-- Progress Widget -->
+        <div class="flex items-center gap-2 sm:gap-3 bg-slate-950/40 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-800/50">
+          <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+            <i class="fa-solid fa-layer-group text-sm sm:text-lg"></i>
+          </div>
+          <div>
+            <div class="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Progress</div>
+            <div id="game-progress" class="font-heading text-sm sm:text-lg font-bold text-indigo-400">Level 1/10</div>
+          </div>
+        </div>
+
+        <!-- Level Type/Multiplier Widget -->
+        <div class="flex items-center gap-2 sm:gap-3 bg-slate-950/40 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-800/50">
+          <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <i class="fa-solid fa-shield-halved text-sm sm:text-lg"></i>
+          </div>
+          <div>
+            <div class="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Difficulty</div>
+            <div id="game-difficulty" class="font-heading text-sm sm:text-lg font-bold text-emerald-400">Easy</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Panel & Hints Bar -->
+      <div class="flex justify-between items-center bg-slate-900/40 p-3 rounded-2xl border border-slate-800/60">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" id="level-category">Logic Puzzle</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Hints remaining counts -->
+          <button id="hint-btn" onclick="useHint()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 text-amber-300 font-semibold rounded-xl text-xs transition-all duration-150 flex items-center gap-2">
+            <i class="fa-solid fa-lightbulb text-amber-400"></i> Get Hint (<span id="hints-count">3</span>)
+          </button>
+          <button onclick="abandonConfirm()" class="px-3 py-1.5 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs transition-all duration-150">
+            Quit
+          </button>
+        </div>
+      </div>
+
+      <!-- Play Zone Core Container -->
+      <div id="puzzle-box" class="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl relative min-h-[380px] flex flex-col justify-between overflow-hidden">
+        
+        <!-- Splash overlay for level changes/ready states -->
+        <div id="level-splash" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md z-30 flex flex-col items-center justify-center gap-4 transition-all duration-300 pointer-events-none opacity-0">
+          <div class="h-20 w-20 rounded-2xl bg-indigo-500/15 flex items-center justify-center border border-indigo-500/30">
+            <i id="splash-icon" class="fa-solid fa-unlock text-4xl text-indigo-400"></i>
+          </div>
+          <div class="text-center">
+            <span class="text-xs font-semibold uppercase tracking-widest text-indigo-400" id="splash-subtitle">LEVEL INTRO</span>
+            <h3 class="font-heading text-2xl sm:text-3xl font-bold text-white mt-1" id="splash-title">Level Completed</h3>
+            <p class="text-slate-400 text-sm max-w-sm mt-2 mx-auto px-4" id="splash-description">Get ready for the next challenge.</p>
+          </div>
+          <div id="splash-countdown" class="font-heading text-5xl font-extrabold text-indigo-400 mt-2">3</div>
+        </div>
+
+        <!-- Puzzle content generated dynamically by JS -->
+        <div id="puzzle-header" class="mb-4">
+          <h4 id="puzzle-title" class="font-heading text-xl sm:text-2xl font-bold text-white mb-2">Identify the Missing Shape</h4>
+          <p id="puzzle-instruction" class="text-slate-400 text-xs sm:text-sm">Observe the sequence patterns carefully and choose the correct answer option from the bottom.</p>
+        </div>
+
+        <!-- Core Playground (Dynamic Height based on level design) -->
+        <div id="puzzle-playground" class="flex-grow flex items-center justify-center py-4">
+          <!-- Puzzle contents injected dynamically -->
+        </div>
+
+        <!-- Interactive Answer Options Container -->
+        <div id="puzzle-options-container" class="mt-4 border-t border-slate-800/85 pt-4">
+          <div id="puzzle-options" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+            <!-- Options dynamically generated here -->
+          </div>
+          <div id="puzzle-text-input-container" class="hidden flex gap-2">
+            <input type="text" id="puzzle-text-input" placeholder="Type your answer here..." class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-indigo-500 transition-all text-center font-semibold tracking-wide">
+            <button onclick="submitTextInput()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 font-bold rounded-xl text-white transition-all">Submit</button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- 3. GAME OVER / RESULT VIEW -->
+    <section id="result-view" class="view-transition w-full max-w-2xl hidden bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-3xl p-6 sm:p-10 text-center relative overflow-hidden">
+      <!-- Glow effect -->
+      <div class="absolute w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl -top-10 -left-10 pointer-events-none"></div>
+
+      <div class="relative z-10 space-y-6">
+        <div class="inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-slate-950 text-4xl shadow-lg shadow-amber-500/20" id="result-status-icon">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+
+        <h2 id="result-title" class="font-heading text-3xl sm:text-4xl font-extrabold text-white">Challenge Completed!</h2>
+        <p id="result-description" class="text-slate-400 text-sm sm:text-base max-w-md mx-auto">
+          Incredible performance! You completed the challenge. See how well your cognitive skills scored on the charts.
+        </p>
+
+        <!-- Final Stats Scoreboard -->
+        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto py-4">
+          <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+            <div class="text-2xl font-bold font-heading text-indigo-400" id="result-score">2,450</div>
+            <div class="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">Final Score</div>
+          </div>
+          <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+            <div class="text-2xl font-bold font-heading text-emerald-400" id="result-level">Level 10</div>
+            <div class="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">Max Level</div>
+          </div>
+          <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+            <div class="text-2xl font-bold font-heading text-pink-400" id="result-time">02:45</div>
+            <div class="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">Total Time</div>
+          </div>
+        </div>
+
+        <!-- IQ Rank Card -->
+        <div class="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl max-w-md mx-auto flex items-center justify-between">
+          <div class="text-left">
+            <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Brain Rank Assessed</span>
+            <h4 id="result-rank-title" class="text-lg font-bold font-heading text-white">Grandmaster Polymath</h4>
+          </div>
+          <div class="px-3 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 font-bold text-sm" id="result-iq-estimate">
+            Est. IQ: 135+
+          </div>
+        </div>
+
+        <!-- Leaderboard Submit Form (Only if game is finished successfully or with score) -->
+        <div id="leaderboard-submit-box" class="bg-slate-950/40 p-4 rounded-2xl border border-slate-800/60 max-w-md mx-auto space-y-3">
+          <p class="text-xs text-slate-400 font-semibold">Enter your nickname to save your score to the local Leaderboard:</p>
+          <div class="flex gap-2">
+            <input type="text" id="player-name-input" maxlength="15" placeholder="Your Name" class="flex-grow bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all font-semibold">
+            <button onclick="saveScore()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-sm transition-all shadow-md shadow-emerald-500/10">
+              Save
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+          <button onclick="startGame()" class="px-6 py-3.5 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 font-bold rounded-2xl text-white transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/10">
+            <i class="fa-solid fa-rotate-left"></i> Play Again
+          </button>
+          <button onclick="showView('home-view')" class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 font-semibold rounded-2xl text-slate-300 transition-all">
+            Return Home
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modals and Popups -->
+  
+  <!-- MODAL: LEADERBOARD & ACHIEVEMENTS -->
+  <div id="leaderboard-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl transform scale-95 transition-all duration-300 flex flex-col max-h-[85vh]">
+      
+      <!-- Modal Header Tabs -->
+      <div class="flex border-b border-slate-800 bg-slate-950/50 p-2">
+        <button id="tab-leaderboard-btn" onclick="toggleModalTab('leaderboard')" class="flex-1 py-3 text-center rounded-xl font-heading font-bold text-sm bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 transition-all">
+          <i class="fa-solid fa-trophy mr-1.5 text-amber-400"></i> Local Leaderboard
+        </button>
+        <button id="tab-achievements-btn" onclick="toggleModalTab('achievements')" class="flex-1 py-3 text-center rounded-xl font-heading font-bold text-sm text-slate-400 hover:text-slate-200 transition-all">
+          <i class="fa-solid fa-award mr-1.5 text-pink-400"></i> Achievements
+        </button>
+      </div>
+
+      <!-- Scrollable Panels -->
+      <div class="p-5 overflow-y-auto flex-grow space-y-4" id="modal-scroll-area">
+        <!-- Content gets dynamically replaced by tabs -->
+        <div id="leaderboard-panel" class="space-y-3">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div id="achievements-panel" class="space-y-3 hidden">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 border-t border-slate-800 bg-slate-950/50 flex justify-end">
+        <button onclick="closeLeaderboard()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold text-sm transition-all">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HOW TO PLAY / INSTRUCTIONS -->
+  <div id="instructions-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl transform scale-95 transition-all duration-300 p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+          <i class="fa-solid fa-circle-info text-lg"></i>
+        </div>
+        <h3 class="font-heading text-xl font-bold text-white">How To Play</h3>
+      </div>
+      
+      <div class="text-slate-400 text-sm space-y-3 leading-relaxed">
+        <p>Welcome to <strong>Brain Puzzle Challenge</strong>! Test your cognitive capacity through 10 distinct, engaging stages designed to trigger lateral thinking.</p>
+        
+        <ul class="space-y-2 text-xs">
+          <li class="flex items-start gap-2">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <span><strong>Types of challenges:</strong> Visual sequencing, mental calculation, memory matrix patterns, anagram cracking, and mechanical logic deduction.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-indigo-400 font-bold">✓</span>
+            <span><strong>Time Limit:</strong> You start with a global countdown. Correct answers add extra precious seconds, wrong answers deduct time penalty.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-amber-400 font-bold">✓</span>
+            <span><strong>Hints:</strong> You get 3 free hints to unlock challenging logic structures. Using them reduces potential maximum scores!</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-pink-400 font-bold">✓</span>
+            <span><strong>High Score:</strong> Speed, precision, level reached, and leftover timer determine your rank. Aim for the Master tier!</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeInstructions()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all">
+          Got It!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRM ABANDON -->
+  <div id="abandon-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-6 space-y-4 text-center">
+      <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 text-xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="font-heading text-lg font-bold text-white">Abandon Challenge?</h3>
+      <p class="text-slate-400 text-xs">Are you sure you want to end this run? All progress for this current attempt will be lost.</p>
+      
+      <div class="flex gap-3 pt-2">
+        <button onclick="abandonConfirmAction()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm transition-all">
+          Quit Run
+        </button>
+        <button onclick="closeAbandon()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-sm transition-all">
+          Keep Playing
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Info -->
+  <footer class="border-t border-slate-900 bg-slate-950/80 px-4 py-4 text-center text-xs text-slate-500">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p>&copy; 2026 Brain Puzzle Challenge. All cognitive exercises procedural & responsive.</p>
+      <div class="flex gap-4">
+        <span class="hover:text-slate-300 transition-colors">Improve Logic</span>
+        <span class="hover:text-slate-300 transition-colors">Sharpen Memory</span>
+        <span class="hover:text-slate-300 transition-colors">Enhance Math IQ</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script for Puzzle Engines and Mechanics -->
+  <script>
+    // --- Audio System Using Web Audio API ---
+    // Zero dependencies! Procedurally generated sounds for maximum optimization.
+    const AudioEngine = {
+      ctx: null,
+      enabled: true,
+
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      },
+
+      playTone(freq, type, duration, volume = 0.1) {
+        if (!this.enabled) return;
+        this.init();
+        try {
+          const osc = this.ctx.createOscillator();
+          const gainNode = this.ctx.createGain();
+          
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          
+          gainNode.gain.setValueAtTime(volume, this.ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+          
+          osc.connect(gainNode);
+          gainNode.connect(this.ctx.destination);
+          
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {
+          console.error("Audio playback error:", e);
+        }
+      },
+
+      playSuccess() {
+        this.playTone(523.25, 'sine', 0.15, 0.15); // C5
+        setTimeout(() => this.playTone(659.25, 'sine', 0.25, 0.15), 100); // E5
+        setTimeout(() => this.playTone(783.99, 'sine', 0.35, 0.15), 200); // G5
+      },
+
+      playFail() {
+        this.playTone(293.66, 'sawtooth', 0.15, 0.1); // D4
+        setTimeout(() => this.playTone(220.00, 'sawtooth', 0.3, 0.1), 120); // A3
+      },
+
+      playTick() {
+        this.playTone(800, 'triangle', 0.05, 0.05);
+      },
+
+      playUnlock() {
+        this.playTone(392.00, 'sine', 0.1, 0.1); // G4
+        setTimeout(() => this.playTone(523.25, 'sine', 0.1, 0.1), 80); // C5
+        setTimeout(() => this.playTone(659.25, 'sine', 0.1, 0.1), 160); // E5
+        setTimeout(() => this.playTone(783.99, 'sine', 0.3, 0.1), 240); // G5
+      },
+
+      playPowerup() {
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => {
+            this.playTone(400 + (i * 150), 'sine', 0.12, 0.08);
+          }, i * 60);
+        }
+      }
+    };
+
+    function toggleSound() {
+      AudioEngine.enabled = !AudioEngine.enabled;
+      const icon = document.getElementById('sound-icon');
+      if (AudioEngine.enabled) {
+        icon.className = 'fa-solid fa-volume-high';
+        showToast('Sound effects enabled', 'indigo', 'fa-volume-high');
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark';
+        showToast('Sound effects muted', 'slate', 'fa-volume-xmark');
+      }
+    }
+
+    // --- GAME DATA & STATE ---
+    const TOTAL_LEVELS = 10;
+    let currentLevelIndex = 0;
+    let score = 0;
+    let hintsUsed = 0;
+    let hintsTotal = 3;
+    let globalTimerSeconds = 240; // Total challenge time
+    let timerInterval = null;
+    let timerCriticalThreshold = 15;
+    let activeLevelData = null;
+    let memoryGameSelectedCards = [];
+    let memorySequence = [];
+    let playerMemorySequence = [];
+    let levelTimeStart = 0;
+    let totalChallengeTimeStart = 0;
+
+    // LOCAL STORAGE KEYS
+    const STORAGE_KEY_LEADERBOARD = 'brain_puzzle_leaderboard_v1';
+    const STORAGE_KEY_ACHIEVEMENTS = 'brain_puzzle_achievements_v1';
+
+    // Levels Declarations
+    const LEVELS = [
+      {
+        id: 1,
+        title: "The Fibonacci Spark",
+        category: "Number Logic",
+        difficulty: "Easy",
+        instruction: "Find the missing number in this progressive series.",
+        hint: "The rule: Each term is obtained by adding the two previous numbers together. (Example: 1, 1, 2, 3...)",
+        timeBonus: 15,
+        engine: "seriesFibonacci"
+      },
+      {
+        id: 2,
+        title: "Symmetric Oddity",
+        category: "Pattern Recognition",
+        difficulty: "Easy",
+        instruction: "Find the odd pattern out that doesn't share the same rotational symmetry logic.",
+        hint: "Count the number of symmetry axes or look at clockwise rotation order.",
+        timeBonus: 15,
+        engine: "oddOnePattern"
+      },
+      {
+        id: 3,
+        title: "Mathematical Grid Lock",
+        category: "Mathematical IQ",
+        difficulty: "Medium",
+        instruction: "Calculate the value that completes the mathematical equilibrium in the 3x3 matrix grid.",
+        hint: "The third row/column is usually a direct operation (addition/multiplication) of the first two.",
+        timeBonus: 20,
+        engine: "mathGrid"
+      },
+      {
+        id: 4,
+        title: "Simon's Neon Matrix",
+        category: "Memory Retention",
+        difficulty: "Medium",
+        instruction: "Remember and replicate the sequential order in which the neon nodes flash.",
+        hint: "Focus your eyes on the full pattern. Take an association visual snapshot.",
+        timeBonus: 25,
+        engine: "memorySequence"
+      },
+      {
+        id: 5,
+        title: "The Spatial Anagram",
+        category: "Spatial Anagram",
+        difficulty: "Medium",
+        instruction: "Rearrange the scrambled characters to build a word related strictly to 'Mind or Science'.",
+        hint: "This 5-letter or 6-letter word starts with letters like 'B', 'C', 'N', or 'S'.",
+        timeBonus: 20,
+        engine: "anagramMind"
+      },
+      {
+        id: 6,
+        title: "Interlocking Gear Ratio",
+        category: "Mechanical Logic",
+        difficulty: "Medium",
+        instruction: "If the leftmost neon gear spins Clockwise (CW), which direction will the green marker gear rotate?",
+        hint: "Gears mesh in opposite directions. Two interlocking gears turn opposite. An odd number of connected gears returns the original path.",
+        timeBonus: 25,
+        engine: "mechanicalGears"
+      },
+      {
+        id: 7,
+        title: "Equation Balance Matrix",
+        category: "Algebraic Deduction",
+        difficulty: "Hard",
+        instruction: "Deduce the value of the 'Brain' token based on the visual geometric balance equations.",
+        hint: "Try substitution. Substitute simpler figures to solve the system of linear formulas.",
+        timeBonus: 30,
+        engine: "equationsBalance"
+      },
+      {
+        id: 8,
+        title: "Spatial Rotation Riddle",
+        category: "Spatial Aptitude",
+        difficulty: "Hard",
+        instruction: "Which answer represents the 3D projection cube rotated 90 degrees clockwise relative to the main figure?",
+        hint: "Observe the adjacent symbols layout. One symbol shouldn't be visible or must rotate dynamically.",
+        timeBonus: 30,
+        engine: "cubeRotation"
+      },
+      {
+        id: 9,
+        title: "Reflective Light Path",
+        category: "Laser Path Physics",
+        difficulty: "Hard",
+        instruction: "Which path coordinate will the light photon hit after hitting the reflective dynamic laser prisms?",
+        hint: "Prisms operate at precise 45-degree angles to bounce light strictly horizontal or vertical.",
+        timeBonus: 35,
+        engine: "laserBounce"
+      },
+      {
+        id: 10,
+        title: "The Einstein Grid Riddle",
+        category: "Pure Deduction",
+        difficulty: "Expert",
+        instruction: "Solve the grid logic problem: Who owns the legendary Emerald ring?",
+        hint: "Red cannot wear Emeralds. Read the logical matrix assertions below carefully to deduce.",
+        timeBonus: 40,
+        engine: "einsteinDeduction"
+      }
+    ];
+
+    // --- VIEW CONTROLLER ---
+    function showView(viewId) {
+      const views = ['home-view', 'game-view', 'result-view'];
+      views.forEach(v => {
+        const el = document.getElementById(v);
+        if (v === viewId) {
+          el.classList.remove('hidden');
+          // Smooth fade in
+          setTimeout(() => el.classList.add('opacity-100'), 50);
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('opacity-100');
+        }
+      });
+
+      // Updates home view score if visited
+      if (viewId === 'home-view') {
+        const best = getBestScore();
+        document.getElementById('home-best-score').textContent = best;
+      }
+    }
+
+    // --- GAME LIFECYCLE ---
+    function startGame() {
+      AudioEngine.init();
+      AudioEngine.playPowerup();
+      
+      currentLevelIndex = 0;
+      score = 0;
+      hintsUsed = 0;
+      hintsTotal = 3;
+      globalTimerSeconds = 250; // generous baseline
+      totalChallengeTimeStart = Date.now();
+
+      document.getElementById('game-score').textContent = "0000";
+      document.getElementById('hints-count').textContent = hintsTotal;
+      document.getElementById('hint-btn').disabled = false;
+      document.getElementById('hint-btn').classList.remove('opacity-50');
+
+      showView('game-view');
+      loadLevel(currentLevelIndex);
+
+      // Start global timer loop
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimerTick, 1000);
+    }
+
+    function updateTimerTick() {
+      globalTimerSeconds--;
+      if (globalTimerSeconds <= 0) {
+        globalTimerSeconds = 0;
+        clearInterval(timerInterval);
+        gameOver(false); // Time out
+      }
+      
+      // Update Timer Text
+      const minutes = Math.floor(globalTimerSeconds / 60);
+      const seconds = globalTimerSeconds % 60;
+      const formatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      const timerEl = document.getElementById('game-timer');
+      timerEl.textContent = formatted;
+
+      // Pulse red during critical countdown
+      if (globalTimerSeconds <= timerCriticalThreshold) {
+        timerEl.classList.add('text-red-500', 'animate-pulse');
+        AudioEngine.playTick();
+      } else {
+        timerEl.classList.remove('text-red-500', 'animate-pulse');
+      }
+    }
+
+    function changeScore(delta) {
+      score += delta;
+      if (score < 0) score = 0;
+      
+      const scoreEl = document.getElementById('game-score');
+      // Simple count up effect
+      let currentVal = parseInt(scoreEl.textContent);
+      const targetVal = score;
+      const diff = targetVal - currentVal;
+      
+      if (diff !== 0) {
+        const step = Math.ceil(Math.abs(diff) / 10) * Math.sign(diff);
+        const anime = setInterval(() => {
+          currentVal += step;
+          if ((step > 0 && currentVal >= targetVal) || (step < 0 && currentVal <= targetVal)) {
+            currentVal = targetVal;
+            clearInterval(anime);
+          }
+          scoreEl.textContent = currentVal.toString().padStart(4, '0');
+        }, 30);
+      }
+    }
+
+    function loadLevel(index) {
+      activeLevelData = LEVELS[index];
+      levelTimeStart = Date.now();
+
+      // UI Update Level Header
+      document.getElementById('game-progress').textContent = `Level ${activeLevelData.id}/${TOTAL_LEVELS}`;
+      document.getElementById('game-difficulty').textContent = activeLevelData.difficulty;
+      document.getElementById('level-category').textContent = activeLevelData.category;
+
+      // Color coding difficulty badge
+      const diffEl = document.getElementById('game-difficulty');
+      diffEl.className = "font-heading text-lg font-bold ";
+      if (activeLevelData.difficulty === "Easy") diffEl.classList.add('text-emerald-400');
+      else if (activeLevelData.difficulty === "Medium") diffEl.classList.add('text-indigo-400');
+      else if (activeLevelData.difficulty === "Hard") diffEl.classList.add('text-pink-400');
+      else diffEl.classList.add('text-red-500', 'animate-pulse');
+
+      // Set Title and Instructions
+      document.getElementById('puzzle-title').textContent = activeLevelData.title;
+      document.getElementById('puzzle-instruction').textContent = activeLevelData.instruction;
+
+      // Reset options display formats and parent visibility
+      document.getElementById('puzzle-options-container').classList.remove('hidden');
+      document.getElementById('puzzle-options').classList.remove('hidden');
+      document.getElementById('puzzle-text-input-container').classList.add('hidden');
+      
+      // Reset input disabled state
+      const textInput = document.getElementById('puzzle-text-input');
+      if (textInput) textInput.disabled = false;
+
+      // Triggers flash overlay splash
+      triggerLevelSplash(index + 1);
+    }
+
+    function triggerLevelSplash(levelNum) {
+      const splash = document.getElementById('level-splash');
+      const sub = document.getElementById('splash-subtitle');
+      const title = document.getElementById('splash-title');
+      const desc = document.getElementById('splash-description');
+      const count = document.getElementById('splash-countdown');
+      const icon = document.getElementById('splash-icon');
+
+      sub.textContent = `CHALLENGE ${levelNum}`;
+      title.textContent = activeLevelData.title;
+      desc.textContent = activeLevelData.instruction;
+      
+      icon.className = "fa-solid text-4xl text-indigo-400 " + (levelNum <= 3 ? "fa-brain" : levelNum <= 7 ? "fa-bolt" : "fa-shield-halved");
+
+      splash.classList.remove('pointer-events-none', 'opacity-0');
+      splash.classList.add('opacity-100');
+
+      AudioEngine.playUnlock();
+
+      let i = 2;
+      count.textContent = i;
+      const cnt = setInterval(() => {
+        i--;
+        if (i <= 0) {
+          clearInterval(cnt);
+          splash.classList.remove('opacity-100');
+          splash.classList.add('opacity-0', 'pointer-events-none');
+          // Injects the level layout
+          generatePuzzleContent();
+        } else {
+          count.textContent = i;
+        }
+      }, 700);
+    }
+
+    // --- HINTS CONTROLLER ---
+    function useHint() {
+      if (hintsTotal <= 0) {
+        showToast("No hints remaining!", "red", "fa-triangle-exclamation");
+        return;
+      }
+      hintsTotal--;
+      hintsUsed++;
+      document.getElementById('hints-count').textContent = hintsTotal;
+      if (hintsTotal <= 0) {
+        document.getElementById('hint-btn').disabled = true;
+        document.getElementById('hint-btn').classList.add('opacity-50');
+      }
+
+      // Decreases level potential score multiplier slightly as a trade-off
+      showToast("Hint applied! (-50 points potential penalty)", "amber", "fa-lightbulb");
+      AudioEngine.playTone(440, 'triangle', 0.5, 0.1);
+
+      // Procedural Hint presentation (appends to subtitle)
+      const instr = document.getElementById('puzzle-instruction');
+      instr.innerHTML = `<strong>Hint:</strong> <span class="text-amber-300">${activeLevelData.hint}</span>`;
+    }
+
+    // --- PUZZLE ENGINES ---
+    function generatePuzzleContent() {
+      const playground = document.getElementById('puzzle-playground');
+      const optionsBox = document.getElementById('puzzle-options');
+      playground.innerHTML = "";
+      optionsBox.innerHTML = "";
+
+      const engine = activeLevelData.engine;
+
+      switch(engine) {
+        case "seriesFibonacci":
+          runSeriesFibonacci(playground, optionsBox);
+          break;
+        case "oddOnePattern":
+          runOddOnePattern(playground, optionsBox);
+          break;
+        case "mathGrid":
+          runMathGrid(playground, optionsBox);
+          break;
+        case "memorySequence":
+          runMemorySequence(playground, optionsBox);
+          break;
+        case "anagramMind":
+          runAnagramMind(playground, optionsBox);
+          break;
+        case "mechanicalGears":
+          runMechanicalGears(playground, optionsBox);
+          break;
+        case "equationsBalance":
+          runEquationsBalance(playground, optionsBox);
+          break;
+        case "cubeRotation":
+          runCubeRotation(playground, optionsBox);
+          break;
+        case "laserBounce":
+          runLaserBounce(playground, optionsBox);
+          break;
+        case "einsteinDeduction":
+          runEinsteinDeduction(playground, optionsBox);
+          break;
+      }
+    }
+
+    // Helper: generate random range
+    function randRange(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Helper: shuffle array
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // Helper: generate uniform options buttons
+    function renderStandardOptions(options, correctAns, optionsBox) {
+      optionsBox.innerHTML = "";
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "p-3 sm:p-4 bg-slate-950 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-900 font-heading font-bold text-sm sm:text-lg rounded-xl sm:rounded-2xl text-slate-200 transition-all active:scale-[0.98]";
+        btn.innerHTML = opt;
+        btn.onclick = () => submitAnswer(opt, correctAns);
+        optionsBox.appendChild(btn);
+      });
+    }
+
+    // 1. FIBONACCI SERIES
+    function runSeriesFibonacci(play, opt) {
+      const start = randRange(1, 5);
+      const seq = [start, start + randRange(1, 3)];
+      for (let i = 2; i < 7; i++) {
+        seq.push(seq[i-1] + seq[i-2]);
+      }
+      const missingIndex = 5; // Replace 6th element
+      const correctAns = seq[missingIndex];
+      seq[missingIndex] = "?";
+
+      // Show large visual responsive numbers
+      play.innerHTML = `
+        <div class="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-center py-6">
+          ${seq.map(num => `
+            <div class="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 rounded-xl sm:rounded-2xl bg-slate-950 border-2 border-slate-800 flex items-center justify-center font-heading text-lg sm:text-xl md:text-2xl font-bold ${num === '?' ? 'text-indigo-400 border-indigo-500/40 animate-pulse' : 'text-slate-300'}">
+              ${num}
+            </div>
+          `).join('<span class="text-slate-600 text-lg sm:text-xl font-bold">,</span>')}
+        </div>
+      `;
+
+      // Options
+      const pool = new Set([correctAns]);
+      while (pool.size < 4) {
+        pool.add(correctAns + randRange(-5, 8));
+      }
+      renderStandardOptions(shuffleArray(Array.from(pool)), correctAns, opt);
+    }
+
+    // 2. ODD ONE PATTERN
+    function runOddOnePattern(play, opt) {
+      const shapes = [];
+      const correctId = randRange(1, 4);
+
+      for (let i = 1; i <= 4; i++) {
+        const isOdd = i === correctId;
+        let svgMarkup = "";
+        if (!isOdd) {
+          // Symmetrical Star
+          svgMarkup = `
+            <svg class="w-12 h-12 sm:w-16 sm:h-16 text-emerald-400" viewBox="0 0 100 100" fill="currentColor">
+              <polygon points="50,15 61,38 85,38 66,54 73,78 50,64 27,78 34,54 15,38 39,38"/>
+            </svg>
+          `;
+        } else {
+          // Slightly distorted unbalanced star
+          svgMarkup = `
+            <svg class="w-12 h-12 sm:w-16 sm:h-16 text-pink-400" viewBox="0 0 100 100" fill="currentColor">
+              <polygon points="50,15 54,38 85,45 61,54 73,85 50,64 22,78 34,48 10,38 39,38"/>
+            </svg>
+          `;
+        }
+        shapes.push({ id: i, element: svgMarkup });
+      }
+
+      play.innerHTML = `
+        <div class="grid grid-cols-2 gap-3 w-full max-w-sm">
+          ${shapes.map(s => `
+            <button onclick="submitAnswer(${s.id}, ${correctId})" class="p-4 sm:p-6 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500 rounded-3xl flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95">
+              ${s.element}
+              <span class="text-xs text-slate-500 font-bold">Pattern ${s.id}</span>
+            </button>
+          `).join('')}
+        </div>
+      `;
+
+      // Hide default bottom option containers, user interacts with playgrid directly
+      document.getElementById('puzzle-options-container').classList.add('hidden');
+    }
+
+    // 3. MATH GRID
+    function runMathGrid(play, opt) {
+      const colA = [randRange(2, 6), randRange(3, 7)];
+      const colB = [randRange(2, 5), randRange(2, 6)];
+      const offset = randRange(1, 3);
+      colA.push(colA[0] * colA[1] - offset);
+      colB.push(colB[0] * colB[1] - offset);
+
+      const targetCol = [randRange(2, 5), randRange(3, 5)];
+      const correctAns = targetCol[0] * targetCol[1] - offset;
+      targetCol.push("?");
+
+      play.innerHTML = `
+        <div class="bg-slate-950/60 p-4 sm:p-6 rounded-3xl border border-slate-800">
+          <div class="grid grid-cols-3 gap-2 sm:grid-cols-3 sm:gap-3 w-56 sm:w-72 text-center font-heading text-base sm:text-xl font-bold">
+            <div class="p-2 sm:p-3 bg-slate-900 text-slate-300 rounded-lg">${colA[0]}</div>
+            <div class="p-2 sm:p-3 bg-slate-900 text-slate-300 rounded-lg">${colB[0]}</div>
+            <div class="p-2 sm:p-3 bg-slate-900 text-slate-300 rounded-lg">${targetCol[0]}</div>
+            
+            <div class="p-2 sm:p-3 bg-slate-900 text-slate-300 rounded-lg">${colA[1]}</div>
+            <div class="p-2 sm:p-3 bg-slate-900 text-slate-300 rounded-lg">${colB[1]}</div>
+            <div class="p-2 sm:p-3 bg-slate-900 text-slate-300 rounded-lg">${targetCol[1]}</div>
+            
+            <div class="p-2 sm:p-3 border border-indigo-500/20 text-indigo-400 bg-indigo-500/5 rounded-lg">${colA[2]}</div>
+            <div class="p-2 sm:p-3 border border-indigo-500/20 text-indigo-400 bg-indigo-500/5 rounded-lg">${colB[2]}</div>
+            <div class="p-2 sm:p-3 bg-indigo-500 text-slate-950 rounded-lg text-xl sm:text-2xl font-extrabold animate-pulse">${targetCol[2]}</div>
+          </div>
+        </div>
+      `;
+
+      const pool = new Set([correctAns]);
+      while (pool.size < 4) {
+        pool.add(correctAns + randRange(-4, 10));
+      }
+      renderStandardOptions(shuffleArray(Array.from(pool)), correctAns, opt);
+    }
+
+    // 4. MEMORY SEQUENCE
+    function runMemorySequence(play, opt) {
+      play.innerHTML = `
+        <div class="space-y-4 text-center">
+          <div class="grid grid-cols-2 gap-3 sm:gap-4 w-44 sm:w-60 mx-auto">
+            <button id="node-0" disabled class="h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl border border-slate-800 bg-slate-950/90 transition-all shadow-md"></button>
+            <button id="node-1" disabled class="h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl border border-slate-800 bg-slate-950/90 transition-all shadow-md"></button>
+            <button id="node-2" disabled class="h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl border border-slate-800 bg-slate-950/90 transition-all shadow-md"></button>
+            <button id="node-3" disabled class="h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl border border-slate-800 bg-slate-950/90 transition-all shadow-md"></button>
+          </div>
+          <div id="memo-alert" class="text-xs text-indigo-400 font-bold uppercase tracking-wider h-4">Memorize the Sequence</div>
+        </div>
+      `;
+
+      document.getElementById('puzzle-options-container').classList.add('hidden');
+
+      const colors = [
+        { normal: 'border-slate-800 bg-slate-950/90', active: 'border-indigo-400 bg-indigo-500/20 text-indigo-300 ring-4 ring-indigo-500/20', tone: 440 },
+        { normal: 'border-slate-800 bg-slate-950/90', active: 'border-emerald-400 bg-emerald-500/20 text-emerald-300 ring-4 ring-emerald-500/20', tone: 520 },
+        { normal: 'border-slate-800 bg-slate-950/90', active: 'border-pink-400 bg-pink-500/20 text-pink-300 ring-4 ring-pink-500/20', tone: 600 },
+        { normal: 'border-slate-800 bg-slate-950/90', active: 'border-amber-400 bg-amber-500/20 text-amber-300 ring-4 ring-amber-500/20', tone: 680 }
+      ];
+
+      memorySequence = [randRange(0,3), randRange(0,3), randRange(0,3), randRange(0,3)];
+      playerMemorySequence = [];
+
+      let delay = 600;
+      memorySequence.forEach((nodeIdx, step) => {
+        setTimeout(() => {
+          const btn = document.getElementById(`node-${nodeIdx}`);
+          if (btn) {
+            btn.className = `h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl border transition-all shadow-md ${colors[nodeIdx].active}`;
+            AudioEngine.playTone(colors[nodeIdx].tone, 'triangle', 0.2, 0.12);
+            setTimeout(() => {
+              btn.className = `h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl border transition-all shadow-md ${colors[nodeIdx].normal}`;
+            }, 350);
+          }
+        }, delay);
+        delay += 650;
+      });
+
+      setTimeout(() => {
+        const alertBox = document.getElementById('memo-alert');
+        if (alertBox) alertBox.textContent = "Your Turn! Replicate Pattern";
+
+        for (let i = 0; i < 4; i++) {
+          const btn = document.getElementById(`node-${i}`);
+          if (btn) {
+            btn.removeAttribute('disabled');
+            btn.classList.add('hover:border-slate-600', 'cursor-pointer');
+            btn.onclick = () => handleMemoryInput(i, colors);
+          }
+        }
+      }, delay);
+    }
+
+    function handleMemoryInput(idx, colors) {
+      playerMemorySequence.push(idx);
+      const btn = document.getElementById(`node-${idx}`);
+      
+      btn.className = `h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl border transition-all shadow-md ${colors[idx].active}`;
+      AudioEngine.playTone(colors[idx].tone, 'sine', 0.15, 0.1);
+      setTimeout(() => {
+        btn.className = `h-20 w-20 sm:h-28 sm:w-28 rounded-2xl sm:rounded-3xl border transition-all shadow-md ${colors[idx].normal}`;
+      }, 200);
+
+      const currentStep = playerMemorySequence.length - 1;
+      if (playerMemorySequence[currentStep] !== memorySequence[currentStep]) {
+        showToast("Incorrect Pattern Sequence!", "red", "fa-xmark");
+        AudioEngine.playFail();
+        changeScore(-50);
+        globalTimerSeconds -= 10;
+        setTimeout(() => generatePuzzleContent(), 800);
+        return;
+      }
+
+      if (playerMemorySequence.length === memorySequence.length) {
+        // Disable buttons after completion to avoid duplicate clicks
+        for (let i = 0; i < 4; i++) {
+          const el = document.getElementById(`node-${i}`);
+          if (el) el.setAttribute('disabled', 'true');
+        }
+        submitAnswer(true, true);
+      }
+    }
+
+    // 5. ANAGRAMS
+    function runAnagramMind(play, opt) {
+      const words = [
+        { orig: "NEURON", scram: "ONRUNE", cat: "Brain anatomy unit" },
+        { orig: "CORTEX", scram: "TEOCRX", cat: "Brain gray outer layer" },
+        { orig: "COGNITION", scram: "TIGNOCION", cat: "Process of acquiring knowledge" },
+        { orig: "SYNAPSE", scram: "NASPYSE", cat: "Gap between neuron junctions" },
+        { orig: "GENIUS", scram: "UINESG", cat: "Exceptional intellectual ability" }
+      ];
+      const selected = words[randRange(0, words.length - 1)];
+
+      // Fully responsive letter layout to prevent horizontal cutoffs on mobile
+      play.innerHTML = `
+        <div class="text-center space-y-4 max-w-full px-2">
+          <div class="flex items-center justify-center gap-1 sm:gap-2 flex-wrap max-w-full">
+            ${selected.scram.split('').map(letter => `
+              <div class="h-8 w-8 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-heading text-base sm:text-xl font-bold text-pink-400">
+                ${letter}
+              </div>
+            `).join('')}
+          </div>
+          <div class="text-xs text-slate-500 uppercase font-semibold tracking-wider">Scrambled Clue: "${selected.cat}"</div>
+        </div>
+      `;
+
+      // Keep options container visible but hide grid choices, show text input
+      document.getElementById('puzzle-options-container').classList.remove('hidden');
+      document.getElementById('puzzle-options').classList.add('hidden');
+      
+      const textContainer = document.getElementById('puzzle-text-input-container');
+      const textInput = document.getElementById('puzzle-text-input');
+      
+      textContainer.classList.remove('hidden');
+      textInput.value = "";
+      textInput.focus();
+
+      window.submitTextInput = () => {
+        const val = textInput.value.trim().toUpperCase();
+        if (val === selected.orig) {
+          textInput.disabled = true;
+          submitAnswer(true, true);
+        } else {
+          showToast("Wrong Word! Try again", "red", "fa-xmark");
+          AudioEngine.playFail();
+          changeScore(-25);
+          textInput.value = "";
+        }
+      };
+    }
+
+    // 6. INTERLOCKING GEARS
+    function runMechanicalGears(play, opt) {
+      const gearCount = randRange(3, 5);
+      const correctAns = (gearCount % 2 === 1) ? "Clockwise (CW)" : "Counter-Clockwise (CCW)";
+
+      play.innerHTML = `
+        <div class="flex flex-col items-center gap-6 py-4 w-full">
+          <div class="flex items-center justify-center gap-1 sm:gap-2 bg-slate-950/40 p-4 rounded-3xl border border-slate-800">
+            ${Array.from({length: gearCount}).map((_, i) => {
+              const size = i === 0 || i === gearCount - 1 ? 'w-12 h-12 sm:w-20 sm:h-20' : 'w-8 h-8 sm:w-12 sm:h-12';
+              const color = i === 0 ? 'text-indigo-400' : i === gearCount - 1 ? 'text-emerald-400' : 'text-slate-600';
+              const rotationClass = i % 2 === 0 ? 'animate-[spin_4s_linear_infinite]' : 'animate-[spin_4s_linear_infinite_reverse]';
+              return `
+                <div class="flex flex-col items-center gap-1">
+                  <div class="${size} ${color} ${rotationClass}">
+                    <svg viewBox="0 0 100 100" fill="currentColor">
+                      <path d="M50 0c-4 0-7 3-8 7l-2 1a42 42 0 00-6 4l-1-2c-3-3-8-3-11 0l-5 5c-3 3-3 8 0 11l2 1a42 42 0 00-4 6l-1-1c-4-1-8 2-8 7v6c0 4 3 7 7 8l1 2c0 2 1 4 3 6l-2 1c-3 3-3 8 0 11l5 5c3 3 8 3 11 0l1-2c2 1 4 2 6 3l1 2c1 4 4 7 8 7h6c4 0 7-3 8-7l2-1c2-1 4-2 6-3l1 2c3 3 8 3 11 0l5-5c3-3 3-8 0-11l-2-1c1-2 2-4 3-6l2 1c4 1 8-2 8-7v-6c0-4-3-7-7-8l-1-2c-1-2-2-4-3-6l2-1c3-3 3-8 0-11l-5-5c-3-3-8-3-11 0l-1 2c-2-1-4-2-6-3l-1-2c-1-4-4-7-8-7h-6zm0 29c12 0 21 9 21 21s-9 21-21 21-21-9-21-21 9-21 21-21z"/>
+                    </svg>
+                  </div>
+                  <span class="text-[8px] font-bold ${i === 0 ? 'text-indigo-400' : i === gearCount-1 ? 'text-emerald-400' : 'text-slate-600'}">
+                    ${i === 0 ? 'START' : i === gearCount - 1 ? 'MARKER' : `G-${i+1}`}
+                  </span>
+                </div>
+              `;
+            }).join('<i class="fa-solid fa-link text-[8px] text-slate-800"></i>')}
+          </div>
+          <p class="text-xs text-slate-500 text-center max-w-sm">
+            Observe the mechanical connection of the gears. A Clockwise spin on Start is indicated. Compute marker spin direction.
+          </p>
+        </div>
+      `;
+
+      renderStandardOptions(["Clockwise (CW)", "Counter-Clockwise (CCW)"], correctAns, opt);
+    }
+
+    // 7. BALANCED EQUATIONS
+    function runEquationsBalance(play, opt) {
+      const circleVal = randRange(2, 8);
+      const squareVal = randRange(3, 9);
+      const brainVal = circleVal + squareVal;
+
+      play.innerHTML = `
+        <div class="bg-slate-950/40 p-4 sm:p-6 rounded-3xl border border-slate-800 space-y-4 max-w-md w-full">
+          <div class="grid grid-cols-1 gap-2 text-center text-sm font-heading tracking-wide">
+            <div class="p-3 bg-slate-900/50 rounded-xl border border-slate-800 flex items-center justify-center gap-3">
+              <span class="text-indigo-400 font-bold">🟢 Circle</span> = <span class="text-white font-extrabold">${circleVal}</span>
+            </div>
+            <div class="p-3 bg-slate-900/50 rounded-xl border border-slate-800 flex items-center justify-center gap-3">
+              <span class="text-pink-400 font-bold">🟪 Square</span> = <span class="text-white font-extrabold">${squareVal}</span>
+            </div>
+            <div class="p-3 bg-slate-900/50 rounded-xl border border-slate-800 flex items-center justify-center gap-2">
+              <span class="text-emerald-300 font-bold">🧠 Brain</span> = <span>🟢 Circle</span> + <span>🟪 Square</span>
+            </div>
+            <div class="p-4 bg-indigo-500/5 rounded-xl border border-indigo-500/10 text-white font-bold flex items-center justify-center gap-2 text-base">
+              Solve: 🧠 Brain = <span class="text-indigo-400 animate-pulse text-lg font-black">?</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const pool = new Set([brainVal]);
+      while (pool.size < 4) {
+        pool.add(brainVal + randRange(-4, 6));
+      }
+      renderStandardOptions(shuffleArray(Array.from(pool)), brainVal, opt);
+    }
+
+    // 8. CUBE ROTATION
+    function runCubeRotation(play, opt) {
+      const correctAns = 'Triangle (▲)';
+
+      play.innerHTML = `
+        <div class="flex flex-col sm:flex-row items-center gap-6 py-4">
+          <svg viewBox="0 0 100 100" class="w-28 h-28 sm:w-32 sm:h-32 text-indigo-400 filter drop-shadow-md">
+            <polygon points="50,15 80,30 50,45 20,30" fill="rgba(99, 102, 241, 0.15)" stroke="#6366f1" stroke-width="2"/>
+            <polygon points="20,30 50,45 50,85 20,70" fill="rgba(99, 102, 241, 0.08)" stroke="#6366f1" stroke-width="2"/>
+            <polygon points="50,45 80,30 80,70 50,85" fill="rgba(99, 102, 241, 0.22)" stroke="#6366f1" stroke-width="2"/>
+            <text x="32" y="58" fill="#cbd5e1" font-weight="bold" font-size="12">★</text>
+            <text x="62" y="58" fill="#cbd5e1" font-weight="bold" font-size="12">▲</text>
+            <text x="47" y="34" fill="#6366f1" font-weight="bold" font-size="12">●</text>
+          </svg>
+          
+          <div class="text-xs text-slate-400 space-y-2 max-w-xs text-center sm:text-left">
+            <p><strong>Cube Logic:</strong></p>
+            <p>Left side hosts star (★), Front side hosts circle (●), and Right side hosts triangle (▲).</p>
+            <p class="text-indigo-300">If you rotate the complete cube layout 90 degrees Clockwise horizontally, which symbol faces the Right side?</p>
+          </div>
+        </div>
+      `;
+
+      renderStandardOptions(['Star (★)', 'Circle (●)', 'Triangle (▲)', 'Empty Side'], 'Star (★)', opt);
+    }
+
+    // 9. LASER BOUNCE
+    function runLaserBounce(play, opt) {
+      const correctAns = "(3, 1)";
+
+      // Highly condensed representation optimized for responsive viewports
+      play.innerHTML = `
+        <div class="flex flex-col items-center gap-4 w-full">
+          <div class="bg-slate-950 p-3 sm:p-4 rounded-3xl border border-slate-800 w-full max-w-xs">
+            <div class="grid grid-cols-3 gap-2 text-center text-[10px] sm:text-xs font-bold font-mono">
+              <div class="p-2 bg-slate-900 border border-indigo-500/30 text-indigo-400 rounded-lg flex flex-col items-center justify-center gap-1">
+                <span>⚡</span>
+                <span>(1,1)</span>
+              </div>
+              <div class="p-2 bg-slate-900 text-slate-600 rounded-lg flex items-center justify-center">(1,2)</div>
+              <div class="p-2 bg-slate-900/80 text-amber-400 border border-amber-500/20 rounded-lg flex flex-col items-center justify-center gap-1">
+                <span>🪞</span>
+                <span>(1,3)</span>
+              </div>
+              
+              <div class="p-2 bg-slate-900 text-slate-600 rounded-lg flex items-center justify-center">(2,1)</div>
+              <div class="p-2 bg-slate-900 text-slate-600 rounded-lg flex items-center justify-center">(2,2)</div>
+              <div class="p-2 bg-slate-900 text-slate-600 rounded-lg flex items-center justify-center">(2,3)</div>
+              
+              <div class="p-2 bg-slate-900 border border-emerald-500/20 text-emerald-400 rounded-lg font-extrabold animate-pulse flex flex-col items-center justify-center gap-1">
+                <span>❓</span>
+                <span>(3,1)</span>
+              </div>
+              <div class="p-2 bg-slate-900 text-slate-600 rounded-lg flex items-center justify-center">(3,2)</div>
+              <div class="p-2 bg-slate-900/80 text-amber-400 border border-amber-500/20 rounded-lg flex flex-col items-center justify-center gap-1">
+                <span>🪞</span>
+                <span>(3,3)</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 max-w-xs text-center">
+            Laser shoots horizontally to the right from (1,1). Mirrored prisms are positioned at grid points (1,3) and (3,3) reflecting path 90 degrees sequentially. Trace the exact grid coordinate target.
+          </p>
+        </div>
+      `;
+
+      renderStandardOptions(["(3, 1)", "(2, 2)", "(3, 2)", "(2, 1)"], correctAns, opt);
+    }
+
+    // 10. EINSTEIN DEDUCTION
+    function runEinsteinDeduction(play, opt) {
+      const correctAns = "The Blue House Resident";
+
+      play.innerHTML = `
+        <div class="bg-slate-950/40 p-4 sm:p-5 rounded-3xl border border-slate-800 space-y-4 max-w-md w-full">
+          <div class="space-y-2 text-[11px] sm:text-xs leading-relaxed text-slate-300">
+            <h5 class="font-bold text-indigo-400 uppercase tracking-widest text-center mb-1 text-xs">Clues Table</h5>
+            <div class="p-2 bg-slate-900/50 border border-slate-800 rounded-xl">
+              🔑 House A (Left): Red colored. Resident is an artist who wears zero jewelry.
+            </div>
+            <div class="p-2 bg-slate-900/50 border border-slate-800 rounded-xl">
+              🔑 House B (Center): Host to the Emerald Ring owner.
+            </div>
+            <div class="p-2 bg-slate-900/50 border border-slate-800 rounded-xl">
+              🔑 House C (Right): Green colored. Resident wears a silver wristwatch.
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 text-center font-semibold pt-2 border-t border-slate-800/60">
+            Deduce who owns the mythical <strong class="text-emerald-400">Emerald Ring</strong>?
+          </p>
+        </div>
+      `;
+
+      renderStandardOptions([
+        "The Red House Resident",
+        "The Blue House Resident",
+        "The Green House Resident",
+        "Insufficient Data"
+      ], correctAns, opt);
+    }
+
+    // --- ANSWER VALIDATION ---
+    function submitAnswer(chosen, correct) {
+      // Stop interaction temporarily to showcase animations
+      const buttons = document.querySelectorAll('#puzzle-options button');
+      buttons.forEach(b => b.disabled = true);
+
+      // Score Computation & Speed Bonus
+      const levelTimeElapsed = (Date.now() - levelTimeStart) / 1000;
+      const idealTimeLimit = 25; // seconds
+      const speedMultiplier = levelTimeElapsed < idealTimeLimit ? 1.5 : 1.0;
+
+      if (chosen === correct) {
+        AudioEngine.playSuccess();
+        const baseScore = 200;
+        const levelBonus = (currentLevelIndex + 1) * 20;
+        const hintPenalty = hintsUsed > 0 ? (hintsUsed * 50) : 0;
+        const totalAwarded = Math.round((baseScore + levelBonus - hintPenalty) * speedMultiplier);
+
+        changeScore(totalAwarded);
+        globalTimerSeconds += activeLevelData.timeBonus;
+        showToast(`Correct! +${totalAwarded} pts & +${activeLevelData.timeBonus}s time bonus!`, "emerald", "fa-circle-check");
+
+        currentLevelIndex++;
+        if (currentLevelIndex < TOTAL_LEVELS) {
+          setTimeout(() => loadLevel(currentLevelIndex), 1000);
+        } else {
+          setTimeout(() => gameOver(true), 1200);
+        }
+      } else {
+        AudioEngine.playFail();
+        changeScore(-75); 
+        globalTimerSeconds -= 15; 
+        showToast("Wrong deduction! -75 pts and -15s penalty", "rose", "fa-circle-xmark");
+
+        setTimeout(() => {
+          buttons.forEach(b => b.disabled = false);
+        }, 1000);
+      }
+    }
+
+    // --- GAME OVER & SUBMISSION ---
+    function gameOver(completedSuccess) {
+      if (timerInterval) clearInterval(timerInterval);
+      showView('result-view');
+
+      const totalTimeElapsed = Math.round((Date.now() - totalChallengeTimeStart) / 1000);
+      const m = Math.floor(totalTimeElapsed / 60);
+      const s = totalTimeElapsed % 60;
+      const formattedTotalTime = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+      document.getElementById('result-score').textContent = score;
+      document.getElementById('result-level').textContent = `Level ${currentLevelIndex}/${TOTAL_LEVELS}`;
+      document.getElementById('result-time').textContent = formattedTotalTime;
+
+      const titleEl = document.getElementById('result-title');
+      const descEl = document.getElementById('result-description');
+      const iconEl = document.getElementById('result-status-icon');
+      const rankTitle = document.getElementById('result-rank-title');
+      const iqEst = document.getElementById('result-iq-estimate');
+
+      const submissionBox = document.getElementById('leaderboard-submit-box');
+      if (score > 0) {
+        submissionBox.classList.remove('hidden');
+      } else {
+        submissionBox.classList.add('hidden');
+      }
+
+      if (completedSuccess) {
+        titleEl.textContent = "Challenge Completed!";
+        descEl.textContent = "Spectacular problem-solving ability! You mastered all complex patterns in the puzzle sequence.";
+        iconEl.className = "inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-slate-950 text-4xl shadow-lg shadow-amber-500/20";
+        iconEl.innerHTML = `<i class="fa-solid fa-trophy"></i>`;
+        
+        if (score >= 2000) {
+          rankTitle.textContent = "Quantum Polymath";
+          iqEst.textContent = "Est. IQ: 145+";
+          awardAchievement("polymath");
+        } else {
+          rankTitle.textContent = "Grand Strategist";
+          iqEst.textContent = "Est. IQ: 130+";
+          awardAchievement("strategist");
+        }
+      } else {
+        titleEl.textContent = "Challenge Ended";
+        descEl.textContent = "The temporal limit expired! Focus on speeding up pattern matching in your next run.";
+        iconEl.className = "inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-red-600 text-white text-4xl shadow-lg shadow-rose-500/20";
+        iconEl.innerHTML = `<i class="fa-solid fa-hourglass-end"></i>`;
+        
+        rankTitle.textContent = "Cognitive Apprentice";
+        iqEst.textContent = "Est. IQ: 95+";
+      }
+
+      saveBestScore(score);
+    }
+
+    // --- TOAST NOTIFICATIONS ---
+    function showToast(message, type, iconClass) {
+      const toast = document.getElementById('toast');
+      const bg = document.getElementById('toast-bg');
+      const icon = document.getElementById('toast-icon');
+      const msg = document.getElementById('toast-message');
+
+      msg.textContent = message;
+      icon.className = `fa-solid ${iconClass}`;
+
+      bg.className = "flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl border text-sm font-semibold backdrop-blur-md ";
+      if (type === "emerald") {
+        bg.classList.add("bg-emerald-950/90", "border-emerald-500/30", "text-emerald-300");
+      } else if (type === "rose") {
+        bg.classList.add("bg-rose-950/90", "border-rose-500/30", "text-rose-300");
+      } else if (type === "amber") {
+        bg.classList.add("bg-amber-950/90", "border-amber-500/30", "text-amber-300");
+      } else {
+        bg.classList.add("bg-slate-900/95", "border-slate-800", "text-slate-200");
+      }
+
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      toast.style.transform = "translateY(0) translateX(-50%)";
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+        toast.style.transform = "translateY(-100px) translateX(-50%)";
+      }, 2500);
+    }
+
+    // --- LOCAL STORAGE & DATA PERSISTENCE ---
+    function getBestScore() {
+      const records = getLeaderboard();
+      if (records.length === 0) return 0;
+      return Math.max(...records.map(r => r.score));
+    }
+
+    function saveBestScore(val) {
+      const currentBest = parseInt(localStorage.getItem('brain_puzzle_high') || "0");
+      if (val > currentBest) {
+        localStorage.setItem('brain_puzzle_high', val);
+      }
+    }
+
+    function getLeaderboard() {
+      const raw = localStorage.getItem(STORAGE_KEY_LEADERBOARD);
+      return raw ? JSON.parse(raw) : [
+        { name: "AlphaNode", score: 2500, date: "2026-06-20", rank: "Grandmaster" },
+        { name: "PuzzleByte", score: 1850, date: "2026-06-22", rank: "Expert" },
+        { name: "MindSlicer", score: 1200, date: "2026-06-23", rank: "Adept" }
+      ];
+    }
+
+    function saveScore() {
+      const input = document.getElementById('player-name-input');
+      const name = input.value.trim() || "Anonymous";
+      
+      const records = getLeaderboard();
+      
+      let rank = "Apprentice";
+      if (score >= 2200) rank = "Grandmaster";
+      else if (score >= 1500) rank = "Expert";
+      else if (score >= 1000) rank = "Adept";
+
+      records.push({
+        name: name,
+        score: score,
+        date: new Date().toISOString().split('T')[0],
+        rank: rank
+      });
+
+      records.sort((a,b) => b.score - a.score);
+      localStorage.setItem(STORAGE_KEY_LEADERBOARD, JSON.stringify(records.slice(0, 10)));
+
+      showToast("Score successfully saved to Leaderboard!", "emerald", "fa-floppy-disk");
+      document.getElementById('leaderboard-submit-box').classList.add('hidden');
+      awardAchievement("named");
+      
+      setTimeout(() => openLeaderboard(), 500);
+    }
+
+    // --- LEADERBOARD & ACHIEVEMENTS MODAL ---
+    function openLeaderboard() {
+      const modal = document.getElementById('leaderboard-modal');
+      modal.classList.remove('pointer-events-none', 'opacity-0');
+      modal.classList.add('opacity-100');
+      modal.querySelector('.transform').classList.remove('scale-95');
+      modal.querySelector('.transform').classList.add('scale-100');
+      
+      toggleModalTab('leaderboard');
+    }
+
+    function closeLeaderboard() {
+      const modal = document.getElementById('leaderboard-modal');
+      modal.classList.add('pointer-events-none', 'opacity-0');
+      modal.classList.remove('opacity-100');
+      modal.querySelector('.transform').classList.remove('scale-100');
+      modal.querySelector('.transform').classList.add('scale-95');
+    }
+
+    function toggleModalTab(tab) {
+      const lBtn = document.getElementById('tab-leaderboard-btn');
+      const aBtn = document.getElementById('tab-achievements-btn');
+      const lPanel = document.getElementById('leaderboard-panel');
+      const aPanel = document.getElementById('achievements-panel');
+
+      if (tab === 'leaderboard') {
+        lBtn.className = "flex-1 py-3 text-center rounded-xl font-heading font-bold text-sm bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 transition-all";
+        aBtn.className = "flex-1 py-3 text-center rounded-xl font-heading font-bold text-sm text-slate-400 hover:text-slate-200 transition-all";
+        lPanel.classList.remove('hidden');
+        aPanel.classList.add('hidden');
+        renderLeaderboardHTML();
+      } else {
+        aBtn.className = "flex-1 py-3 text-center rounded-xl font-heading font-bold text-sm bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 transition-all";
+        lBtn.className = "flex-1 py-3 text-center rounded-xl font-heading font-bold text-sm text-slate-400 hover:text-slate-200 transition-all";
+        aPanel.classList.remove('hidden');
+        lPanel.classList.add('hidden');
+        renderAchievementsHTML();
+      }
+    }
+
+    function renderLeaderboardHTML() {
+      const panel = document.getElementById('leaderboard-panel');
+      const records = getLeaderboard();
+
+      panel.innerHTML = `
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-500 px-2 uppercase tracking-wider mb-2">
+          <span>Player & Rank</span>
+          <span>Score</span>
+        </div>
+        <div class="space-y-2">
+          ${records.map((r, i) => `
+            <div class="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800 rounded-2xl">
+              <div class="flex items-center gap-3">
+                <div class="h-8 w-8 rounded-lg flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-amber-400/20 text-amber-300' : i === 1 ? 'bg-slate-400/20 text-slate-300' : i === 2 ? 'bg-amber-700/20 text-amber-600' : 'bg-slate-900 text-slate-500'}">
+                  ${i + 1}
+                </div>
+                <div>
+                  <h5 class="text-sm font-bold text-white leading-tight">${r.name}</h5>
+                  <span class="text-[10px] text-indigo-400 font-semibold uppercase tracking-wider">${r.rank}</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="font-heading font-bold text-base text-emerald-400">${r.score}</span>
+                <span class="block text-[9px] text-slate-600">${r.date}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // --- ACHIEVEMENTS ---
+    const ACHIEVEMENTS_LIST = [
+      { id: "polymath", title: "Quantum Polymath", desc: "Achieve over 2000 total score points on a challenge run.", icon: "fa-atom", color: "from-purple-500 to-indigo-500" },
+      { id: "strategist", title: "Grand Strategist", desc: "Unlock 130+ estimated IQ rating.", icon: "fa-chess-queen", color: "from-amber-400 to-orange-500" },
+      { id: "named", title: "Eternal Legacy", desc: "Save your nickname onto the Local Leaderboard.", icon: "fa-signature", color: "from-emerald-400 to-teal-500" },
+      { id: "clean_run", title: "Flawless Dedication", desc: "Reach level 5 without ever requesting a hint.", icon: "fa-star", color: "from-rose-400 to-pink-500" }
+    ];
+
+    function getAwardedAchievements() {
+      const raw = localStorage.getItem(STORAGE_KEY_ACHIEVEMENTS);
+      return raw ? JSON.parse(raw) : [];
+    }
+
+    function awardAchievement(id) {
+      const current = getAwardedAchievements();
+      if (!current.includes(id)) {
+        current.push(id);
+        localStorage.setItem(STORAGE_KEY_ACHIEVEMENTS, JSON.stringify(current));
+        
+        const item = ACHIEVEMENTS_LIST.find(a => a.id === id);
+        if (item) {
+          setTimeout(() => {
+            showToast(`Achievement Unlocked: ${item.title}!`, "amber", "fa-award");
+            AudioEngine.playSuccess();
+          }, 1500);
+        }
+      }
+    }
+
+    function renderAchievementsHTML() {
+      const panel = document.getElementById('achievements-panel');
+      const awarded = getAwardedAchievements();
+
+      panel.innerHTML = `
+        <div class="space-y-3">
+          ${ACHIEVEMENTS_LIST.map(item => {
+            const unlocked = awarded.includes(item.id);
+            return `
+              <div class="flex items-center gap-4 p-4 bg-slate-950 border ${unlocked ? 'border-amber-500/20 bg-amber-500/5' : 'border-slate-800 opacity-60'} rounded-2xl">
+                <div class="h-12 w-12 rounded-xl bg-gradient-to-tr ${unlocked ? item.color : 'from-slate-800 to-slate-900'} flex items-center justify-center text-xl text-slate-950 shadow-md">
+                  <i class="fa-solid ${item.icon} ${unlocked ? 'text-slate-950' : 'text-slate-600'}"></i>
+                </div>
+                <div class="flex-grow">
+                  <h5 class="text-sm font-bold ${unlocked ? 'text-white' : 'text-slate-400'}">${item.title}</h5>
+                  <p class="text-[11px] text-slate-500 mt-0.5">${item.desc}</p>
+                </div>
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-wider ${unlocked ? 'text-amber-400' : 'text-slate-600'}">
+                    ${unlocked ? 'Unlocked' : 'Locked'}
+                  </span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function openAchievements() {
+      openLeaderboard();
+      toggleModalTab('achievements');
+    }
+
+    // --- OTHER MODALS ---
+    function showInstructions() {
+      const modal = document.getElementById('instructions-modal');
+      modal.classList.remove('pointer-events-none', 'opacity-0');
+      modal.classList.add('opacity-100');
+      modal.querySelector('.transform').classList.remove('scale-95');
+      modal.querySelector('.transform').classList.add('scale-100');
+    }
+
+    function closeInstructions() {
+      const modal = document.getElementById('instructions-modal');
+      modal.classList.add('pointer-events-none', 'opacity-0');
+      modal.classList.remove('opacity-100');
+      modal.querySelector('.transform').classList.remove('scale-100');
+      modal.querySelector('.transform').classList.add('scale-95');
+    }
+
+    function abandonConfirm() {
+      const modal = document.getElementById('abandon-modal');
+      modal.classList.remove('pointer-events-none', 'opacity-0');
+      modal.classList.add('opacity-100');
+      modal.querySelector('.transform').classList.remove('scale-95');
+      modal.querySelector('.transform').classList.add('scale-100');
+    }
+
+    function abandonConfirmAction() {
+      closeAbandon();
+      if (timerInterval) clearInterval(timerInterval);
+      gameOver(false);
+    }
+
+    function closeAbandon() {
+      const modal = document.getElementById('abandon-modal');
+      modal.classList.add('pointer-events-none', 'opacity-0');
+      modal.classList.remove('opacity-100');
+      modal.querySelector('.transform').classList.remove('scale-100');
+      modal.querySelector('.transform').classList.add('scale-95');
+    }
+
+    // --- INIT ---
+    window.onload = function() {
+      const best = getBestScore();
+      document.getElementById('home-best-score').textContent = best;
+    };
+  </script>
+</body>
+</html>
